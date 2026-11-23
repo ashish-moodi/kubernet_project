@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: platform
 resources:
   - ../../base
+  - ../../gateway
 images:
   - name: platform-frontend
     newName: platform-frontend
