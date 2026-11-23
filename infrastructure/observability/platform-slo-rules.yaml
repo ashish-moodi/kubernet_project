@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-slo
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: platform-slo
+      rules:
+        - record: platform:backend_health_success:ratio5m
+          expr: |
+            sum(rate(probe_success{job="backend-health"}[5m]))
+            /
+            count(rate(probe_success{job="backend-health"}[5m]))
+        - alert: PlatformBackendAvailabilitySLOBreach
+          expr: platform:backend_health_success:ratio5m < 0.99
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Backend availability is below the 99% SLO.
