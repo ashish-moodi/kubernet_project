@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: platform-backend:dev
+          image: ghcr.io/ashish-moodi/platform-backend@sha256:519330691c5ff1e295638a60fcc2a0d965b8ec6bcc192ea04a8f8334a1b7d018
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
