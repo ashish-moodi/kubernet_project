@@ -10,3 +10,9 @@ images:
   - name: platform-backend
     newName: platform-backend
     newTag: dev
+
+replicas:
+  - name: frontend
+    count: 3
+  - name: backend
+    count: 2
