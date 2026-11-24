@@ -5,3 +5,4 @@ namespace: observability
 
 resources:
   - backend-servicemonitor.yaml
+  - backend-dashboard.yaml

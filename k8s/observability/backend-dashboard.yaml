@@ -1,0 +1,237 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-backend-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+
+data:
+  platform-backend.json: |
+    {
+      "uid": "platform-backend",
+      "title": "Platform - Backend Observability",
+      "tags": ["platform", "backend", "kubernetes", "sre"],
+      "schemaVersion": 39,
+      "version": 1,
+      "editable": true,
+      "refresh": "30s",
+      "timezone": "browser",
+      "time": {
+        "from": "now-30m",
+        "to": "now"
+      },
+      "panels": [
+        {
+          "id": 1,
+          "title": "Healthy Backend Targets",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(up{namespace=\"platform\",service=\"backend\"})",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "red", "value": null},
+                  {"color": "orange", "value": 1},
+                  {"color": "green", "value": 2}
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 2,
+          "title": "Total HTTP Requests",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+          "targets": [
+            {
+              "expr": "sum(http_requests_total{namespace=\"platform\",service=\"backend\"})",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "short", "decimals": 0},
+            "overrides": []
+          }
+        },
+        {
+          "id": 3,
+          "title": "P95 Response Latency",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+          "targets": [
+            {
+              "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"platform\",service=\"backend\"}[5m])))",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "decimals": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "orange", "value": 200},
+                  {"color": "red", "value": 500}
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 4,
+          "title": "HTTP 5xx Error Rate",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+          "targets": [
+            {
+              "expr": "100 * (sum(rate(http_requests_total{namespace=\"platform\",service=\"backend\",status_code=~\"5..\"}[5m])) or vector(0)) / sum(rate(http_requests_total{namespace=\"platform\",service=\"backend\"}[5m]))",
+              "refId": "A",
+              "instant": true
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "decimals": 2,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "orange", "value": 1},
+                  {"color": "red", "value": 5}
+                ]
+              }
+            },
+            "overrides": []
+          }
+        },
+        {
+          "id": 5,
+          "title": "HTTP Requests per Second",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 0, "y": 5},
+          "targets": [
+            {
+              "expr": "sum by (route) (rate(http_requests_total{namespace=\"platform\",service=\"backend\"}[5m]))",
+              "legendFormat": "{{route}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "reqps"},
+            "overrides": []
+          }
+        },
+        {
+          "id": 6,
+          "title": "Response Latency - P50, P95, P99",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 12, "y": 5},
+          "targets": [
+            {
+              "expr": "1000 * histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"platform\",service=\"backend\"}[5m])))",
+              "legendFormat": "P50",
+              "refId": "A"
+            },
+            {
+              "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"platform\",service=\"backend\"}[5m])))",
+              "legendFormat": "P95",
+              "refId": "B"
+            },
+            {
+              "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{namespace=\"platform\",service=\"backend\"}[5m])))",
+              "legendFormat": "P99",
+              "refId": "C"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "ms"},
+            "overrides": []
+          }
+        },
+        {
+          "id": 7,
+          "title": "Backend CPU Usage by Pod",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 0, "y": 14},
+          "targets": [
+            {
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"platform\",container=\"backend\"}[5m]))",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "cores"},
+            "overrides": []
+          }
+        },
+        {
+          "id": 8,
+          "title": "Backend Memory Usage by Pod",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": {"h": 9, "w": 12, "x": 12, "y": 14},
+          "targets": [
+            {
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"platform\",container=\"backend\"})",
+              "legendFormat": "{{pod}}",
+              "refId": "A"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {"unit": "bytes"},
+            "overrides": []
+          }
+        }
+      ]
+    }
