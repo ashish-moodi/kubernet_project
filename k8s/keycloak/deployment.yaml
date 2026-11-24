@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,43 +6,72 @@ metadata:
   namespace: keycloak
 spec:
   replicas: 1
+
   strategy:
     type: Recreate
+
   selector:
     matchLabels:
       app: keycloak
+
   template:
     metadata:
       labels:
         app: keycloak
+
     spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:26.4.0
+
           args:
             - start-dev
+
           env:
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               value: admin
+
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: keycloak-admin
                   key: password
+
+            - name: KC_DB
+              value: postgres
+
+            - name: KC_DB_URL
+              value: jdbc:postgresql://postgres.keycloak.svc.cluster.local:5432/keycloak
+
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db-secret
+                  key: username
+
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db-secret
+                  key: password
+
           ports:
             - name: http
               containerPort: 8080
+
           startupProbe:
             httpGet:
               path: /realms/master
               port: http
             failureThreshold: 60
             periodSeconds: 5
+
           readinessProbe:
             httpGet:
               path: /realms/master
               port: http
             periodSeconds: 10
+
           resources:
             requests:
               cpu: 100m
