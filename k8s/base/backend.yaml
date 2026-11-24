@@ -1,44 +1,67 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
   namespace: platform
+
 spec:
   replicas: 2
+
   selector:
     matchLabels:
       app: backend
+
   template:
     metadata:
       labels:
         app: backend
+
     spec:
       containers:
         - name: backend
-          image: ghcr.io/ashish-moodi/platform-backend@sha256:519330691c5ff1e295638a60fcc2a0d965b8ec6bcc192ea04a8f8334a1b7d018
+          image: ghcr.io/ashish-moodi/platform-backend@sha256:99d963f60381cbe54aaca6011d263a5f00c3dd588a4caad16928f670c5c75b6f
           imagePullPolicy: IfNotPresent
+
           ports:
             - containerPort: 3000
+              name: http
+
           env:
             - name: PORT
               value: "3000"
+
             - name: NODE_ENV
               value: production
+
+            - name: KEYCLOAK_ISSUER
+              value: "http://localhost:8081/realms/platform"
+
+            - name: KEYCLOAK_JWKS_URL
+              value: "http://keycloak.keycloak.svc.cluster.local:8080/realms/platform/protocol/openid-connect/certs"
+
           readinessProbe:
             httpGet:
               path: /health
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
   namespace: platform
+
 spec:
   selector:
     app: backend
+
   ports:
-    - port: 3000
+    - name: http
+      port: 3000
       targetPort: 3000
+      protocol: TCP
+
+  type: ClusterIP

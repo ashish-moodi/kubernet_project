@@ -9,15 +9,6 @@ resources:
   - frontend.yaml
   - backend.yaml
 
-images:
-  - name: platform-frontend
-    newName: ghcr.io/ashish-moodi/platform-frontend
-    digest: sha256:8ce84fd61936f9fb89580bad5366fe76ffd0ea1674f88514a5dd67abfa691435
-
-  - name: platform-backend
-    newName: ghcr.io/ashish-moodi/platform-backend
-    digest: sha256:35a917fe4dff08b5420f59c8502d25f26a388ba493e86aca47870dcb27b82e18
-
 replicas:
   - name: frontend
     count: 3

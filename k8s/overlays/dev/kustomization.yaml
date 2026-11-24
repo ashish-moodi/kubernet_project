@@ -1,16 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+
 namespace: platform
+
 resources:
   - ../../base
   - ../../gateway
-images:
-  - name: platform-frontend
-    newName: platform-frontend
-    newTag: dev
-  - name: platform-backend
-    newName: platform-backend
-    newTag: dev
 
 replicas:
   - name: frontend
