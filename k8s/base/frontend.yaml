@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/ashish-moodi/platform-frontend@sha256:369e57db91dc6faf4d285e67e32dc89f9370bb5308477691c5be590edc00b3b5
+          image: ghcr.io/ashish-moodi/platform-frontend@sha256:c177a491d05728cf4716861c8d351b8739674dcc5ed0b450ff1e63982d86376e
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
