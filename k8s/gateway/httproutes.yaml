@@ -1,4 +1,3 @@
-
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -27,14 +26,28 @@ spec:
   rules:
     - matches:
         - path:
-            type: PathPrefix
-            value: /api
+            type: Exact
+            value: /api/health
       filters:
         - type: URLRewrite
           urlRewrite:
             path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
+              type: ReplaceFullPath
+              replaceFullPath: /health
+      backendRefs:
+        - name: backend
+          port: 3000
+
+    - matches:
+        - path:
+            type: Exact
+            value: /api/profile
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: /profile
       backendRefs:
         - name: backend
           port: 3000

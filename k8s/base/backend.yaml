@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: backend
   namespace: platform
+  labels:
+    app: backend
 
 spec:
   replicas: 2
@@ -53,8 +55,12 @@ kind: Service
 metadata:
   name: backend
   namespace: platform
+  labels:
+    app: backend
 
 spec:
+  type: ClusterIP
+
   selector:
     app: backend
 
@@ -63,5 +69,3 @@ spec:
       port: 3000
       targetPort: 3000
       protocol: TCP
-
-  type: ClusterIP
