@@ -7,7 +7,7 @@ RUN npm ci
 
 COPY . .
 
-ARG VITE_API_URL=http://localhost:3000
+ARG VITE_API_URL=/api
 ARG VITE_KEYCLOAK_URL=http://localhost:8081
 
 ENV VITE_API_URL=$VITE_API_URL
