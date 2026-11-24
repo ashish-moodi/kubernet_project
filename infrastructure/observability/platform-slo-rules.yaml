@@ -11,11 +11,15 @@ spec:
       rules:
         - record: platform:backend_health_success:ratio5m
           expr: |
-            sum(rate(probe_success{job="backend-health"}[5m]))
-            /
-            count(rate(probe_success{job="backend-health"}[5m]))
+            avg(
+              avg_over_time(
+                probe_success{job="backend-health"}[5m]
+              )
+            )
+
         - alert: PlatformBackendAvailabilitySLOBreach
-          expr: platform:backend_health_success:ratio5m < 0.99
+          expr: |
+            platform:backend_health_success:ratio5m < 0.99
           for: 10m
           labels:
             severity: critical

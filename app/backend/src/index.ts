@@ -1,6 +1,10 @@
 import cors from "cors";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import {
+  register,
+  metricsMiddleware,
+} from "./metrics.js";
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -17,6 +21,8 @@ const AUDIENCE = "platform-backend";
 
 const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
 
+app.use(metricsMiddleware);
+
 app.use(cors({ origin: "http://localhost:8080" }));
 app.use(express.json());
 
@@ -25,6 +31,19 @@ app.get("/health", (_req, res) => {
     status: "ok",
     service: "platform-backend",
   });
+});
+
+app.get("/metrics", async (_req, res) => {
+  try {
+    res.setHeader(
+      "Content-Type",
+      register.contentType,
+    );
+
+    res.end(await register.metrics());
+  } catch {
+    res.status(500).end();
+  }
 });
 
 async function authenticate(
