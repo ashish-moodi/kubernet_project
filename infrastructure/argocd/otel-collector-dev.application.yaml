@@ -1,0 +1,105 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: otel-collector-dev
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    targetRevision: "0.183.2"
+
+    helm:
+      releaseName: otel-collector
+
+      valuesObject:
+        mode: deployment
+        replicaCount: 1
+        fullnameOverride: otel-collector
+
+        image:
+          repository: otel/opentelemetry-collector-k8s
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+        ports:
+          otlp:
+            enabled: true
+          otlp-http:
+            enabled: true
+          jaeger-compact:
+            enabled: false
+          jaeger-thrift:
+            enabled: false
+          jaeger-grpc:
+            enabled: false
+          zipkin:
+            enabled: false
+
+        config:
+          receivers:
+            jaeger: null
+            zipkin: null
+            prometheus: null
+
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: "0.0.0.0:4317"
+                http:
+                  endpoint: "0.0.0.0:4318"
+
+          processors:
+            memory_limiter:
+              check_interval: 1s
+              limit_mib: 200
+              spike_limit_mib: 40
+
+            batch:
+              timeout: 5s
+              send_batch_size: 512
+
+          exporters:
+            debug: null
+
+            otlp/tempo:
+              endpoint: tempo.observability.svc.cluster.local:4317
+              tls:
+                insecure: true
+
+          service:
+            pipelines:
+              logs: null
+              metrics: null
+
+              traces:
+                receivers:
+                  - otlp
+                processors:
+                  - memory_limiter
+                  - batch
+                exporters:
+                  - otlp/tempo
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
