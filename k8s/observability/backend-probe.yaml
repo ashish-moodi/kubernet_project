@@ -21,7 +21,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - http://envoy-platform-platform-gateway-d3c09cb8.envoy-gateway-system.svc.cluster.local/api/health
+      - http://envoy-platform-platform-gateway-d3c09cb8.envoy-gateway-system.svc.cluster.local:9999/api/health
       labels:
         application: platform
         component: backend
