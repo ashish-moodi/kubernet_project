@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://kubernetes-sigs.github.io/metrics-server/
     chart: metrics-server
-    targetRevision: "REPLACE_WITH_CHART_VERSION"
+    targetRevision: "3.14.0"
 
     helm:
       releaseName: metrics-server
