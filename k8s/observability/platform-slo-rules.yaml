@@ -1,0 +1,100 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: platform-slo
+  namespace: observability
+  labels:
+    release: kube-prometheus-stack
+
+spec:
+  groups:
+    - name: platform.slo.recording
+      interval: 30s
+
+      rules:
+        - record: platform:backend_availability:ratio5m
+          expr: |
+            avg_over_time(
+              probe_success{job="backend-health"}[5m]
+            )
+
+        - record: platform:backend_availability:ratio24h
+          expr: |
+            avg_over_time(
+              probe_success{job="backend-health"}[24h]
+            )
+
+        - record: platform:backend_latency:p95
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (
+                rate(http_request_duration_seconds_bucket{
+                  namespace="platform",
+                  service="backend"
+                }[5m])
+              )
+            )
+
+        - record: platform:backend_error_rate:ratio5m
+          expr: |
+            sum(rate(http_requests_total{
+              namespace="platform",
+              service="backend",
+              status_code=~"5.."
+            }[5m]) or vector(0))
+            /
+            sum(rate(http_requests_total{
+              namespace="platform",
+              service="backend"
+            }[5m]))
+
+    - name: platform.slo.alerting
+
+      rules:
+        - alert: PlatformBackendDown
+          expr: probe_success{job="backend-health"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Platform backend is unavailable"
+            description: "Backend health probe has failed for 2 minutes."
+
+        - alert: PlatformBackendProbeMissing
+          expr: |
+            absent_over_time(
+              probe_success{job="backend-health"}[2m]
+            )
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend probe metrics are missing"
+
+        - alert: PlatformBackendAvailabilityLow
+          expr: |
+            platform:backend_availability:ratio5m < 0.999
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend availability below 99.9%"
+
+        - alert: PlatformBackendHighLatency
+          expr: platform:backend_latency:p95 > 0.2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Backend P95 latency exceeds 200ms"
+
+        - alert: PlatformBackendHighErrorRate
+          expr: |
+            platform:backend_error_rate:ratio5m > 0.01
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Backend HTTP 5xx error rate exceeds 1%"
